@@ -1,0 +1,123 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Availability - Calendly Clone{% endblock %}
+{% block content %}
+<div class="p-8 max-w-3xl">
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900">Availability</h2>
+        <p class="text-gray-500 mt-1">Set your weekly hours and date overrides</p>
+    </div>
+
+    <!-- Timezone -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Timezone</h3>
+        <form method="POST" action="/admin/availability/timezone" class="flex items-center space-x-3">
+            <select name="timezone" class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                {% for tz in ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu', 'UTC', 'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Kolkata', 'Australia/Sydney'] %}
+                <option value="{{ tz }}" {% if user.timezone == tz %}selected{% endif %}>{{ tz }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Save</button>
+        </form>
+    </div>
+
+    <!-- Weekly Schedule -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Weekly Hours</h3>
+        <form method="POST" action="/admin/availability/schedule">
+            <div class="space-y-3">
+                {% for i in range(7) %}
+                <div class="flex items-center space-x-4 py-2 {% if i < 6 %}border-b border-gray-100{% endif %}">
+                    <label class="flex items-center w-32">
+                        <input type="checkbox" name="day_{{ i }}_enabled"
+                            {% if schedule_map.get(i, {}).get('is_enabled', i < 5) %}checked{% endif %}
+                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+                            onchange="toggleDay(this, {{ i }})">
+                        <span class="text-sm font-medium text-gray-700">{{ days[i] }}</span>
+                    </label>
+                    <div id="day_{{ i }}_times" class="flex items-center space-x-2 {% if not schedule_map.get(i, {}).get('is_enabled', i < 5) %}opacity-50{% endif %}">
+                        <input type="time" name="day_{{ i }}_start"
+                            value="{{ schedule_map.get(i, {}).get('start_time', '09:00') }}"
+                            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <span class="text-gray-400">to</span>
+                        <input type="time" name="day_{{ i }}_end"
+                            value="{{ schedule_map.get(i, {}).get('end_time', '17:00') }}"
+                            class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="mt-4 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                Save Schedule
+            </button>
+        </form>
+    </div>
+
+    <!-- Date Overrides -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Date Overrides</h3>
+        <p class="text-sm text-gray-500 mb-4">Block specific dates or add special availability</p>
+
+        <form method="POST" action="/admin/availability/override" class="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div class="grid grid-cols-2 gap-4 mb-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                    <input type="date" name="override_date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <div class="flex items-center space-x-4 py-2">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="is_available" id="override_available" class="rounded border-gray-300 text-blue-600 mr-2" onchange="toggleOverrideTimes(this)">
+                            <span class="text-sm text-gray-700">Available (with custom hours)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div id="override_times" class="grid grid-cols-2 gap-4 mb-3 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                    <input type="time" name="start_time" value="09:00" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                    <input type="time" name="end_time" value="17:00" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mb-3">Uncheck "Available" to block the entire day</p>
+            <button type="submit" class="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900">Add Override</button>
+        </form>
+
+        {% if overrides %}
+        <div class="space-y-2">
+            {% for ov in overrides %}
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div>
+                    <span class="text-sm font-medium text-gray-900">{{ ov.override_date.strftime('%B %d, %Y') }}</span>
+                    {% if ov.is_available %}
+                    <span class="ml-2 text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">Available {{ ov.start_time }} - {{ ov.end_time }}</span>
+                    {% else %}
+                    <span class="ml-2 text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full">Blocked</span>
+                    {% endif %}
+                </div>
+                <form method="POST" action="/admin/availability/override/{{ ov.id }}/delete">
+                    <button type="submit" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-sm text-gray-400">No date overrides set</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleDay(checkbox, day) {
+    const times = document.getElementById(`day_${day}_times`);
+    times.style.opacity = checkbox.checked ? '1' : '0.5';
+}
+function toggleOverrideTimes(checkbox) {
+    document.getElementById('override_times').style.display = checkbox.checked ? 'grid' : 'none';
+}
+</script>
+{% endblock %}

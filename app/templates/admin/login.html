@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Login - Calendly Clone{% endblock %}
+{% block body %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div class="w-full max-w-md">
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">CalendlyClone</h1>
+                <p class="text-gray-500 mt-2">Sign in to your admin panel</p>
+            </div>
+            {% if error %}
+            <div class="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">{{ error }}</div>
+            {% endif %}
+            <form method="POST" action="/login" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" name="email" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="admin@example.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" name="password" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                        placeholder="Enter your password">
+                </div>
+                <button type="submit"
+                    class="w-full py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition">
+                    Sign In
+                </button>
+            </form>
+            <p class="text-center text-xs text-gray-400 mt-6">Default: admin@example.com / admin123</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

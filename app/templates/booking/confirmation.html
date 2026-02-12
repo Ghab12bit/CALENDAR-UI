@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmed!</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+    {% if google_tag %}
+    <!-- Google Tag -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_tag }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '{{ google_tag }}');
+        // Fire conversion event
+        gtag('event', 'conversion', {
+            'event_category': 'booking',
+            'event_label': '{{ event_type.name }}',
+            'value': 1
+        });
+    </script>
+    {% endif %}
+
+    {% if meta_pixel %}
+    <!-- Meta Pixel -->
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window,document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '{{ meta_pixel }}');
+        fbq('track', 'PageView');
+        // Fire conversion event
+        fbq('track', 'Schedule', {
+            content_name: '{{ event_type.name }}',
+            content_category: 'booking',
+            value: 1,
+            currency: 'USD'
+        });
+    </script>
+    <noscript>
+        <img height="1" width="1" style="display:none"
+             src="https://www.facebook.com/tr?id={{ meta_pixel }}&ev=PageView&noscript=1"/>
+    </noscript>
+    {% endif %}
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+<div class="max-w-lg w-full mx-4">
+    <div class="bg-white rounded-2xl shadow-lg p-8 text-center">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">You are scheduled!</h1>
+        <p class="text-gray-500 mb-8">A calendar invitation has been sent to your email address.</p>
+
+        <div class="bg-gray-50 rounded-xl p-6 text-left space-y-4">
+            <div>
+                <p class="text-sm text-gray-500">Event</p>
+                <p class="font-medium text-gray-900">{{ event_type.name }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">When</p>
+                <p class="font-medium text-gray-900">
+                    {{ booking.start_time.strftime('%A, %B %d, %Y') }}
+                </p>
+                <p class="text-sm text-gray-600">
+                    {{ booking.start_time.strftime('%I:%M %p') }} - {{ booking.end_time.strftime('%I:%M %p') }}
+                    ({{ booking.invitee_timezone }})
+                </p>
+            </div>
+            {% if event_type.location_value %}
+            <div>
+                <p class="text-sm text-gray-500">Where</p>
+                <p class="font-medium text-gray-900">{{ event_type.location_value }}</p>
+            </div>
+            {% endif %}
+            <div>
+                <p class="text-sm text-gray-500">Invitee</p>
+                <p class="font-medium text-gray-900">{{ booking.invitee_name }}</p>
+                <p class="text-sm text-gray-600">{{ booking.invitee_email }}</p>
+            </div>
+
+            {% if answers %}
+            <div class="border-t border-gray-200 pt-4">
+                {% for question, answer in answers.items() %}
+                <div class="mb-2">
+                    <p class="text-xs text-gray-500">{{ question }}</p>
+                    {% if answer is string %}
+                    <p class="text-sm text-gray-900">{{ answer or '-' }}</p>
+                    {% else %}
+                    <p class="text-sm text-gray-900">{{ answer | join(', ') }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <p class="text-center text-xs text-gray-400 mt-4">Powered by CalendlyClone</p>
+</div>
+</body>
+</html>

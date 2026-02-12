@@ -1,0 +1,125 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Settings - Calendly Clone{% endblock %}
+{% block content %}
+<div class="p-8 max-w-2xl">
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900">Settings</h2>
+        <p class="text-gray-500 mt-1">Configure your account and integrations</p>
+    </div>
+
+    {% if saved == 'tracking' %}
+    <div class="bg-green-50 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">Tracking pixels saved successfully.</div>
+    {% elif saved == 'profile' %}
+    <div class="bg-green-50 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">Profile updated successfully.</div>
+    {% elif saved == 'password' %}
+    <div class="bg-green-50 text-green-700 px-4 py-3 rounded-lg mb-6 text-sm">Password changed successfully.</div>
+    {% elif saved == 'password_error' %}
+    <div class="bg-red-50 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">Current password is incorrect.</div>
+    {% endif %}
+
+    <!-- Profile -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Profile</h3>
+        <form method="POST" action="/admin/settings/profile" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
+                <input type="text" name="name" value="{{ user.name }}"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                <select name="timezone" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    {% for tz in ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu', 'UTC', 'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Kolkata', 'Australia/Sydney'] %}
+                    <option value="{{ tz }}" {% if user.timezone == tz %}selected{% endif %}>{{ tz }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Save Profile</button>
+        </form>
+    </div>
+
+    <!-- Change Password -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
+        <form method="POST" action="/admin/settings/password" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                <input type="password" name="current_password" required
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <input type="password" name="new_password" required minlength="6"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <button type="submit" class="px-5 py-2.5 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900">Change Password</button>
+        </form>
+    </div>
+
+    <!-- Tracking Pixels -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Tracking Pixels</h3>
+        <p class="text-sm text-gray-500 mb-4">Add Meta Pixel or Google Tag to your thank-you page for conversion tracking.</p>
+        <form method="POST" action="/admin/settings/tracking" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Meta Pixel ID</label>
+                <input type="text" name="meta_pixel" value="{{ meta_pixel }}"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+                    placeholder="e.g., 123456789012345">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Google Tag ID</label>
+                <input type="text" name="google_tag" value="{{ google_tag }}"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+                    placeholder="e.g., G-XXXXXXXXXX or GTM-XXXXXXX">
+            </div>
+            <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Save Tracking Pixels</button>
+        </form>
+    </div>
+
+    <!-- Integrations -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Integrations</h3>
+
+        <!-- Google Calendar -->
+        <div class="p-4 border border-gray-200 rounded-lg mb-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center mr-3">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">Google Calendar</p>
+                        <p class="text-sm text-gray-500">Sync bookings with your calendar</p>
+                    </div>
+                </div>
+                <!-- TODO: Wire up Google OAuth flow tomorrow -->
+                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 cursor-not-allowed" disabled title="Coming soon - add Google OAuth credentials">
+                    Connect
+                </button>
+            </div>
+            <p class="text-xs text-amber-600 mt-2">TODO: Add Google Calendar OAuth credentials to enable this integration</p>
+        </div>
+
+        <!-- Email / SMTP -->
+        <div class="p-4 border border-gray-200 rounded-lg">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center mr-3">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-900">Email (SMTP)</p>
+                        <p class="text-sm text-gray-500">Send booking confirmations & notifications</p>
+                    </div>
+                </div>
+                <!-- TODO: Wire up SMTP settings tomorrow -->
+                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 cursor-not-allowed" disabled title="Coming soon - add SMTP credentials">
+                    Configure
+                </button>
+            </div>
+            <p class="text-xs text-amber-600 mt-2">TODO: Add SMTP credentials to enable email sending</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

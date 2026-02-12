@@ -1,0 +1,130 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Embed Codes - {{ event_type.name }} - Calendly Clone{% endblock %}
+{% block content %}
+<div class="p-8 max-w-3xl">
+    <a href="/admin/event-types" class="text-sm text-gray-500 hover:text-gray-700 flex items-center mb-2">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Back to Event Types
+    </a>
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900">Embed Codes</h2>
+        <p class="text-gray-500 mt-1">for <span class="font-medium">{{ event_type.name }}</span></p>
+    </div>
+
+    <!-- Direct Link -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Direct Link</h3>
+        <p class="text-sm text-gray-500 mb-3">Share this link directly with anyone</p>
+        <div class="flex items-center space-x-2">
+            <input type="text" readonly value="{{ booking_url }}" id="direct_link"
+                class="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono">
+            <button onclick="copyToClipboard('direct_link')" class="px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Copy</button>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">Supports URL pre-fill: ?name=John&email=john@example.com&phone=1234567890</p>
+    </div>
+
+    <!-- Inline Embed -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Inline Embed</h3>
+        <p class="text-sm text-gray-500 mb-3">Embed the booking page directly on your website</p>
+        <div class="relative">
+            <textarea readonly id="inline_code" rows="4"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"><!-- Calendly Inline Widget -->
+<div id="calendly-inline-widget" style="min-width:320px;height:700px;">
+  <iframe src="{{ booking_url }}?embed=true" width="100%" height="100%" frameborder="0" style="border:none;border-radius:8px;"></iframe>
+</div></textarea>
+            <button onclick="copyToClipboard('inline_code')" class="absolute top-2 right-2 px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">Copy</button>
+        </div>
+    </div>
+
+    <!-- Popup Text Link -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Popup Text Link</h3>
+        <p class="text-sm text-gray-500 mb-3">Opens the booking page in a modal popup</p>
+        <div class="relative">
+            <textarea readonly id="popup_code" rows="12"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"><!-- Calendly Popup Widget -->
+<a href="#" onclick="openCalendlyPopup(); return false;" style="color:#0069ff;font-weight:600;text-decoration:none;">
+  Schedule a meeting
+</a>
+<div id="calendly-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
+  <div style="background:white;border-radius:12px;width:90%;max-width:800px;height:85vh;position:relative;overflow:hidden;">
+    <button onclick="closeCalendlyPopup()" style="position:absolute;top:12px;right:12px;z-index:10;background:#f3f4f6;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px;">&times;</button>
+    <iframe id="calendly-popup-iframe" src="" width="100%" height="100%" frameborder="0" style="border:none;border-radius:12px;"></iframe>
+  </div>
+</div>
+<script>
+function openCalendlyPopup() {
+  document.getElementById('calendly-popup-iframe').src = '{{ booking_url }}?embed=true';
+  var overlay = document.getElementById('calendly-overlay');
+  overlay.style.display = 'flex';
+}
+function closeCalendlyPopup() {
+  document.getElementById('calendly-overlay').style.display = 'none';
+  document.getElementById('calendly-popup-iframe').src = '';
+}
+</script></textarea>
+            <button onclick="copyToClipboard('popup_code')" class="absolute top-2 right-2 px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">Copy</button>
+        </div>
+    </div>
+
+    <!-- Floating Widget Button -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Floating Widget Button</h3>
+        <p class="text-sm text-gray-500 mb-3">A floating button in the bottom-right corner of the page</p>
+        <div class="relative">
+            <textarea readonly id="widget_code" rows="16"
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"><!-- Calendly Floating Widget -->
+<div id="calendly-widget-btn" onclick="openCalendlyWidget()" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:{{ event_type.color }};border-radius:50%;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;z-index:9998;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+</div>
+<div id="calendly-widget-panel" style="display:none;position:fixed;bottom:96px;right:24px;width:400px;height:600px;background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.15);z-index:9999;overflow:hidden;">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #e5e7eb;">
+    <span style="font-weight:600;">{{ event_type.name }}</span>
+    <button onclick="closeCalendlyWidget()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;">&times;</button>
+  </div>
+  <iframe id="calendly-widget-iframe" src="" width="100%" height="calc(100% - 48px)" frameborder="0" style="border:none;"></iframe>
+</div>
+<script>
+function openCalendlyWidget() {
+  document.getElementById('calendly-widget-iframe').src = '{{ booking_url }}?embed=true';
+  document.getElementById('calendly-widget-panel').style.display = 'block';
+}
+function closeCalendlyWidget() {
+  document.getElementById('calendly-widget-panel').style.display = 'none';
+  document.getElementById('calendly-widget-iframe').src = '';
+}
+</script></textarea>
+            <button onclick="copyToClipboard('widget_code')" class="absolute top-2 right-2 px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">Copy</button>
+        </div>
+    </div>
+
+    <!-- Test Preview -->
+    <div class="text-center">
+        <a href="/admin/embed/test/{{ event_type.id }}" target="_blank"
+            class="inline-flex items-center px-5 py-2.5 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            Open Test Page
+        </a>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(id) {
+    const el = document.getElementById(id);
+    const text = el.value || el.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = el.parentElement.querySelector('button[onclick]') || el.nextElementSibling;
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+        btn.classList.add('bg-green-600');
+        setTimeout(() => {
+            btn.textContent = orig;
+            btn.classList.remove('bg-green-600');
+            btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

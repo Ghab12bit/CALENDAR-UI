@@ -1,0 +1,70 @@
+/* CalendlyClone Global Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+/* Smooth transitions */
+a, button {
+    transition: all 0.15s ease;
+}
+
+/* Sidebar active state */
+aside nav a.active {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Toggle switch animation */
+button[data-active] span {
+    transition: transform 0.2s ease;
+}
+
+/* Loading spinner */
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Mobile responsive sidebar */
+@media (max-width: 768px) {
+    .flex.min-h-screen {
+        flex-direction: column;
+    }
+    aside.w-64 {
+        width: 100%;
+    }
+    aside nav {
+        display: flex;
+        overflow-x: auto;
+        padding: 0.5rem;
+    }
+    aside nav a {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    aside .p-6.border-b,
+    aside .p-4.border-t {
+        display: none;
+    }
+}

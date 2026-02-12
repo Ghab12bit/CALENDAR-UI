@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ event_type.name }} - {{ host_name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/booking.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+<div class="max-w-5xl mx-auto py-8 px-4">
+    <div class="bg-white rounded-2xl shadow-lg overflow-hidden" id="booking-container">
+        <div class="grid grid-cols-1 lg:grid-cols-3">
+            <!-- Left Panel: Event Info -->
+            <div class="p-8 border-r border-gray-200 bg-white">
+                <div class="mb-6">
+                    <p class="text-sm text-gray-500 mb-1">{{ host_name }}</p>
+                    <h1 class="text-2xl font-bold text-gray-900">{{ event_type.name }}</h1>
+                </div>
+                <div class="space-y-3 text-sm text-gray-600">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {{ event_type.duration_minutes }} minutes
+                    </div>
+                    {% if event_type.location_value %}
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                        {{ event_type.location_value }}
+                    </div>
+                    {% endif %}
+                    {% if event_type.description %}
+                    <div class="pt-4 border-t border-gray-100">
+                        <p class="text-gray-500">{{ event_type.description }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- Timezone Selector -->
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Time zone</label>
+                    <select id="timezone-select" onchange="changeTimezone()"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </select>
+                </div>
+                <!-- Selected Info -->
+                <div id="selected-info" class="mt-6 pt-4 border-t border-gray-100 hidden">
+                    <p class="text-sm font-medium text-gray-900" id="selected-datetime"></p>
+                </div>
+            </div>
+
+            <!-- Middle Panel: Calendar -->
+            <div class="p-8 border-r border-gray-200" id="calendar-panel">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900" id="month-title"></h2>
+                    <div class="flex space-x-2">
+                        <button onclick="prevMonth()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <button onclick="nextMonth()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-1 mb-2">
+                    <div class="text-center text-xs font-medium text-gray-400 py-2">SUN</div>
+                    <div class="text-center text-xs font-medium text-gray-400 py-2">MON</div>
+                    <div class="text-center text-xs font-medium text-gray-400 py-2">TUE</div>
+                    <div class="text-center text-xs font-medium text-gray-400 py-2">WED</div>
+                    <div class="text-center text-xs font-medium text-gray-400 py-2">THU</div>
+                    <div class="text-center text-xs font-medium text-gray-400 py-2">FRI</div>
+                    <div class="text-center text-xs font-medium text-gray-400 py-2">SAT</div>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+                <div id="calendar-loading" class="text-center py-8 hidden">
+                    <div class="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Time Slots or Form -->
+            <div class="p-8" id="right-panel">
+                <!-- Time Slots View -->
+                <div id="slots-panel" class="hidden">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4" id="slots-date-title"></h3>
+                    <div id="slots-container" class="space-y-2 max-h-96 overflow-y-auto pr-2"></div>
+                    <div id="slots-loading" class="text-center py-8 hidden">
+                        <div class="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <div id="slots-empty" class="text-center py-8 hidden">
+                        <p class="text-gray-500 text-sm">No available times</p>
+                    </div>
+                </div>
+
+                <!-- Booking Form -->
+                <div id="form-panel" class="hidden">
+                    <div class="flex items-center mb-6">
+                        <button onclick="showSlots()" class="mr-3 p-1 hover:bg-gray-100 rounded">
+                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                        </button>
+                        <h3 class="text-lg font-semibold text-gray-900">Enter Details</h3>
+                    </div>
+                    <form id="booking-form" class="space-y-4" onsubmit="submitBooking(event)">
+                        <input type="hidden" name="slot_start" id="slot_start">
+                        <input type="hidden" name="slot_end" id="slot_end">
+                        <input type="hidden" name="timezone" id="form_timezone">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                            <input type="text" name="name" required value="{{ prefill.name }}"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                            <input type="email" name="email" required value="{{ prefill.email }}"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                        </div>
+                        {% if prefill.phone or True %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <input type="tel" name="phone" value="{{ prefill.phone }}"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                placeholder="+1 (555) 123-4567">
+                        </div>
+                        {% endif %}
+
+                        <!-- Custom Questions -->
+                        {% for q in questions %}
+                        <div class="custom-question">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                {{ q.question_text }}
+                                {% if q.is_required %}<span class="text-red-500">*</span>{% endif %}
+                            </label>
+
+                            {% if q.question_type == 'text' %}
+                            <input type="text" name="question_{{ q.id }}" {% if q.is_required %}required{% endif %}
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+
+                            {% elif q.question_type == 'textarea' %}
+                            <textarea name="question_{{ q.id }}" rows="3" {% if q.is_required %}required{% endif %}
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"></textarea>
+
+                            {% elif q.question_type == 'radio' %}
+                            <div class="space-y-2 mt-1">
+                                {% for opt in q.parsed_options %}
+                                <label class="flex items-center">
+                                    <input type="radio" name="question_{{ q.id }}" value="{{ opt }}" {% if q.is_required %}required{% endif %}
+                                        class="mr-2 text-blue-600 focus:ring-blue-500">
+                                    <span class="text-sm text-gray-700">{{ opt }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+
+                            {% elif q.question_type == 'checkbox' %}
+                            <div class="space-y-2 mt-1">
+                                {% for opt in q.parsed_options %}
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="question_{{ q.id }}" value="{{ opt }}"
+                                        class="mr-2 rounded text-blue-600 focus:ring-blue-500">
+                                    <span class="text-sm text-gray-700">{{ opt }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+
+                            {% elif q.question_type == 'dropdown' %}
+                            <select name="question_{{ q.id }}" {% if q.is_required %}required{% endif %}
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+                                <option value="">Select an option</option>
+                                {% for opt in q.parsed_options %}
+                                <option value="{{ opt }}">{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+
+                            {% elif q.question_type == 'phone' %}
+                            <input type="tel" name="question_{{ q.id }}" {% if q.is_required %}required{% endif %}
+                                pattern="[\+]?[0-9\s\-\(\)]{7,20}"
+                                title="Enter a valid phone number"
+                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                placeholder="+1 (555) 123-4567">
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <div id="form-error" class="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm hidden"></div>
+
+                        <button type="submit" id="submit-btn"
+                            class="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center justify-center">
+                            <span id="submit-text">Schedule Event</span>
+                            <span id="submit-loading" class="hidden">
+                                <svg class="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Initial State -->
+                <div id="initial-panel">
+                    <div class="text-center py-12">
+                        <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p class="text-gray-500 text-sm">Select a date to see available times</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <p class="text-center text-xs text-gray-400 mt-4">Powered by CalendlyClone</p>
+</div>
+
+<script>
+const EVENT_TYPE_ID = {{ event_type.id }};
+const SLUG = "{{ event_type.slug }}";
+const DURATION = {{ event_type.duration_minutes }};
+
+let currentMonth, currentYear;
+let selectedDate = null;
+let selectedSlot = null;
+let availableDates = [];
+let userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+// Populate timezone selector
+const tzSelect = document.getElementById('timezone-select');
+const commonTimezones = [
+    'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+    'America/Anchorage', 'Pacific/Honolulu', 'UTC', 'Europe/London', 'Europe/Paris',
+    'Europe/Berlin', 'Europe/Moscow', 'Asia/Dubai', 'Asia/Kolkata', 'Asia/Shanghai',
+    'Asia/Tokyo', 'Australia/Sydney', 'Pacific/Auckland'
+];
+// Add detected timezone if not in list
+if (!commonTimezones.includes(userTimezone)) {
+    commonTimezones.unshift(userTimezone);
+}
+commonTimezones.forEach(tz => {
+    const opt = document.createElement('option');
+    opt.value = tz;
+    opt.textContent = tz.replace(/_/g, ' ');
+    if (tz === userTimezone) opt.selected = true;
+    tzSelect.appendChild(opt);
+});
+
+function changeTimezone() {
+    userTimezone = tzSelect.value;
+    if (selectedDate) {
+        loadSlots(selectedDate);
+    }
+}
+
+// Calendar
+const now = new Date();
+currentMonth = now.getMonth();
+currentYear = now.getFullYear();
+
+function renderCalendar() {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
+    document.getElementById('month-title').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Empty cells
+    for (let i = 0; i < firstDay; i++) {
+        grid.innerHTML += '<div></div>';
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dateObj = new Date(currentYear, currentMonth, day);
+        const isPast = dateObj < today;
+        const isAvailable = availableDates.includes(dateStr);
+        const isSelected = selectedDate === dateStr;
+
+        let classes = 'w-10 h-10 flex items-center justify-center rounded-full text-sm font-medium transition ';
+        if (isSelected) {
+            classes += 'bg-blue-600 text-white';
+        } else if (isPast) {
+            classes += 'text-gray-300 cursor-not-allowed';
+        } else if (isAvailable) {
+            classes += 'text-blue-600 font-bold hover:bg-blue-50 cursor-pointer';
+        } else {
+            classes += 'text-gray-400 cursor-not-allowed';
+        }
+
+        const clickable = !isPast && isAvailable;
+        const cell = document.createElement('div');
+        cell.className = 'flex items-center justify-center';
+        cell.innerHTML = `<button type="button" class="${classes}" ${clickable ? `onclick="selectDate('${dateStr}')"` : 'disabled'}>${day}</button>`;
+        grid.appendChild(cell);
+    }
+}
+
+async function loadAvailableDates() {
+    document.getElementById('calendar-loading').classList.remove('hidden');
+    try {
+        const res = await fetch(`/api/available-dates/${EVENT_TYPE_ID}?month=${currentMonth + 1}&year=${currentYear}`);
+        const data = await res.json();
+        availableDates = data.dates || [];
+    } catch (e) {
+        availableDates = [];
+    }
+    document.getElementById('calendar-loading').classList.add('hidden');
+    renderCalendar();
+}
+
+function prevMonth() {
+    currentMonth--;
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    loadAvailableDates();
+}
+
+function nextMonth() {
+    currentMonth++;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    loadAvailableDates();
+}
+
+function selectDate(dateStr) {
+    selectedDate = dateStr;
+    renderCalendar();
+    loadSlots(dateStr);
+}
+
+async function loadSlots(dateStr) {
+    document.getElementById('initial-panel').classList.add('hidden');
+    document.getElementById('form-panel').classList.add('hidden');
+    document.getElementById('slots-panel').classList.remove('hidden');
+    document.getElementById('slots-loading').classList.remove('hidden');
+    document.getElementById('slots-container').innerHTML = '';
+    document.getElementById('slots-empty').classList.add('hidden');
+
+    const d = new Date(dateStr + 'T12:00:00');
+    const opts = { weekday: 'long', month: 'long', day: 'numeric' };
+    document.getElementById('slots-date-title').textContent = d.toLocaleDateString('en-US', opts);
+
+    try {
+        const res = await fetch(`/api/available-slots/${EVENT_TYPE_ID}?date_str=${dateStr}&tz=${userTimezone}`);
+        const data = await res.json();
+        const slots = data.slots || [];
+
+        document.getElementById('slots-loading').classList.add('hidden');
+
+        if (slots.length === 0) {
+            document.getElementById('slots-empty').classList.remove('hidden');
+            return;
+        }
+
+        const container = document.getElementById('slots-container');
+        slots.forEach(slot => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'w-full py-3 px-4 text-center border-2 border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-600 hover:text-white transition text-sm';
+            btn.textContent = slot.start;
+            btn.onclick = () => selectSlot(slot);
+            container.appendChild(btn);
+        });
+    } catch (e) {
+        document.getElementById('slots-loading').classList.add('hidden');
+        document.getElementById('slots-empty').classList.remove('hidden');
+    }
+}
+
+function selectSlot(slot) {
+    selectedSlot = slot;
+    document.getElementById('slot_start').value = slot.start_iso;
+    document.getElementById('slot_end').value = slot.end_iso;
+    document.getElementById('form_timezone').value = userTimezone;
+
+    // Update selected info
+    const d = new Date(selectedDate + 'T12:00:00');
+    const opts = { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' };
+    document.getElementById('selected-datetime').textContent =
+        `${d.toLocaleDateString('en-US', opts)} at ${slot.start} - ${slot.end}`;
+    document.getElementById('selected-info').classList.remove('hidden');
+
+    showForm();
+}
+
+function showForm() {
+    document.getElementById('slots-panel').classList.add('hidden');
+    document.getElementById('form-panel').classList.remove('hidden');
+}
+
+function showSlots() {
+    document.getElementById('form-panel').classList.add('hidden');
+    document.getElementById('slots-panel').classList.remove('hidden');
+}
+
+async function submitBooking(e) {
+    e.preventDefault();
+    const form = document.getElementById('booking-form');
+    const formData = new FormData(form);
+    const errorDiv = document.getElementById('form-error');
+    errorDiv.classList.add('hidden');
+
+    document.getElementById('submit-text').classList.add('hidden');
+    document.getElementById('submit-loading').classList.remove('hidden');
+    document.getElementById('submit-btn').disabled = true;
+
+    try {
+        const res = await fetch(`/book/${SLUG}/submit`, {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            errorDiv.textContent = data.error || 'Something went wrong';
+            errorDiv.classList.remove('hidden');
+        }
+    } catch (err) {
+        errorDiv.textContent = 'Network error. Please try again.';
+        errorDiv.classList.remove('hidden');
+    }
+
+    document.getElementById('submit-text').classList.remove('hidden');
+    document.getElementById('submit-loading').classList.add('hidden');
+    document.getElementById('submit-btn').disabled = false;
+}
+
+// Init
+loadAvailableDates();
+</script>
+</body>
+</html>

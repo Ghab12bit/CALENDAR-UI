@@ -1,0 +1,159 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Custom Questions - {{ event_type.name }} - Calendly Clone{% endblock %}
+{% block content %}
+<div class="p-8 max-w-3xl">
+    <a href="/admin/event-types" class="text-sm text-gray-500 hover:text-gray-700 flex items-center mb-2">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Back to Event Types
+    </a>
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold text-gray-900">Custom Questions</h2>
+        <p class="text-gray-500 mt-1">for <span class="font-medium">{{ event_type.name }}</span></p>
+    </div>
+
+    <!-- Add Question Form -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Question</h3>
+        <form method="POST" action="/admin/questions/{{ event_type.id }}/add" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Question Text *</label>
+                <input type="text" name="question_text" required
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="e.g., What would you like to discuss?">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select name="question_type" id="new_q_type" onchange="toggleOptionsField()"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="text">Single-line Text</option>
+                        <option value="textarea">Multi-line Text</option>
+                        <option value="radio">Radio Buttons</option>
+                        <option value="checkbox">Checkboxes</option>
+                        <option value="dropdown">Dropdown</option>
+                        <option value="phone">Phone Number</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="is_required" class="rounded border-gray-300 text-blue-600 mr-2">
+                        <span class="text-sm text-gray-700">Required</span>
+                    </label>
+                </div>
+            </div>
+            <div id="options_field" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Options (one per line)</label>
+                <textarea name="options" rows="4"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+            </div>
+            <button type="submit" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Add Question</button>
+        </form>
+    </div>
+
+    <!-- Questions List (Drag & Drop) -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Questions</h3>
+            <span class="text-xs text-gray-400">Drag to reorder</span>
+        </div>
+        {% if questions %}
+        <div id="questions_list" class="space-y-3">
+            {% for q in questions %}
+            <div class="question-item p-4 bg-gray-50 rounded-lg border border-gray-200 cursor-move" draggable="true" data-id="{{ q.id }}">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start flex-1">
+                        <svg class="w-5 h-5 text-gray-400 mr-3 mt-0.5 flex-shrink-0 drag-handle" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <span class="font-medium text-gray-900">{{ q.question_text }}</span>
+                                {% if q.is_required %}
+                                <span class="text-xs px-1.5 py-0.5 bg-red-100 text-red-600 rounded">Required</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex items-center space-x-3 text-xs text-gray-500">
+                                <span class="px-2 py-0.5 bg-gray-200 rounded">{{ q.question_type }}</span>
+                                {% if q.parsed_options %}
+                                <span>Options: {{ q.parsed_options | join(', ') }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 ml-4">
+                        <button onclick="toggleQuestion({{ event_type.id }}, {{ q.id }}, this)"
+                            class="relative inline-flex h-5 w-9 items-center rounded-full transition-colors {% if q.is_enabled %}bg-blue-600{% else %}bg-gray-300{% endif %}">
+                            <span class="inline-block h-3 w-3 transform rounded-full bg-white transition-transform {% if q.is_enabled %}translate-x-5{% else %}translate-x-1{% endif %}"></span>
+                        </button>
+                        <form method="POST" action="/admin/questions/{{ event_type.id }}/{{ q.id }}/delete" class="inline" onsubmit="return confirm('Delete this question?')">
+                            <button type="submit" class="text-red-500 hover:text-red-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-400 text-sm">No custom questions yet. Add one above.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleOptionsField() {
+    const type = document.getElementById('new_q_type').value;
+    const field = document.getElementById('options_field');
+    field.style.display = ['radio', 'checkbox', 'dropdown'].includes(type) ? 'block' : 'none';
+}
+
+async function toggleQuestion(etId, qId, btn) {
+    const res = await fetch(`/admin/questions/${etId}/${qId}/toggle`, {method: 'POST'});
+    const data = await res.json();
+    const enabled = data.is_enabled;
+    btn.className = `relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${enabled ? 'bg-blue-600' : 'bg-gray-300'}`;
+    btn.querySelector('span').className = `inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${enabled ? 'translate-x-5' : 'translate-x-1'}`;
+}
+
+// Drag and drop reordering
+const list = document.getElementById('questions_list');
+if (list) {
+    let dragEl = null;
+    list.addEventListener('dragstart', e => {
+        dragEl = e.target.closest('.question-item');
+        if (dragEl) {
+            dragEl.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+    });
+    list.addEventListener('dragend', e => {
+        if (dragEl) dragEl.style.opacity = '1';
+        dragEl = null;
+    });
+    list.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const target = e.target.closest('.question-item');
+        if (target && target !== dragEl) {
+            const rect = target.getBoundingClientRect();
+            const mid = rect.top + rect.height / 2;
+            if (e.clientY < mid) {
+                list.insertBefore(dragEl, target);
+            } else {
+                list.insertBefore(dragEl, target.nextSibling);
+            }
+        }
+    });
+    list.addEventListener('drop', e => {
+        e.preventDefault();
+        const items = list.querySelectorAll('.question-item');
+        const order = Array.from(items).map(item => item.dataset.id);
+        fetch(`/admin/questions/{{ event_type.id }}/reorder`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({order: order})
+        });
+    });
+}
+</script>
+{% endblock %}

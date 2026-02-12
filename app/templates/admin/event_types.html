@@ -1,0 +1,77 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Event Types - Calendly Clone{% endblock %}
+{% block content %}
+<div class="p-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900">Event Types</h2>
+            <p class="text-gray-500 mt-1">Create and manage your event types</p>
+        </div>
+        <a href="/admin/event-types/new" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            New Event Type
+        </a>
+    </div>
+
+    {% if event_types %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for et in event_types %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="h-2" style="background-color: {{ et.color }}"></div>
+            <div class="p-6">
+                <div class="flex items-start justify-between mb-3">
+                    <h3 class="text-lg font-semibold text-gray-900">{{ et.name }}</h3>
+                    <button onclick="toggleEventType({{ et.id }}, this)"
+                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {% if et.is_active %}bg-blue-600{% else %}bg-gray-300{% endif %}"
+                        data-active="{{ et.is_active }}">
+                        <span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {% if et.is_active %}translate-x-6{% else %}translate-x-1{% endif %}"></span>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">{{ et.description or 'No description' }}</p>
+                <div class="flex items-center text-sm text-gray-500 mb-4 space-x-4">
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        {{ et.duration_minutes }} min
+                    </span>
+                    <span class="flex items-center">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        {{ et.location_type }}
+                    </span>
+                </div>
+                <div class="bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-600 mb-4 font-mono truncate">
+                    /book/{{ et.slug }}
+                </div>
+                <div class="flex items-center space-x-2">
+                    <a href="/admin/event-types/{{ et.id }}/edit" class="flex-1 py-2 px-3 text-center text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Edit</a>
+                    <a href="/admin/questions/{{ et.id }}" class="flex-1 py-2 px-3 text-center text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Questions</a>
+                    <a href="/admin/embed/{{ et.id }}" class="flex-1 py-2 px-3 text-center text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition">Embed</a>
+                    <form method="POST" action="/admin/event-types/{{ et.id }}/delete" onsubmit="return confirm('Delete this event type?')" class="inline">
+                        <button type="submit" class="py-2 px-3 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+        <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No event types yet</h3>
+        <p class="text-gray-500 mb-4">Create your first event type to start accepting bookings</p>
+        <a href="/admin/event-types/new" class="inline-flex items-center px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">Create Event Type</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function toggleEventType(id, btn) {
+    const res = await fetch(`/admin/event-types/${id}/toggle`, {method: 'POST'});
+    const data = await res.json();
+    const active = data.is_active;
+    btn.className = `relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${active ? 'bg-blue-600' : 'bg-gray-300'}`;
+    btn.querySelector('span').className = `inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${active ? 'translate-x-6' : 'translate-x-1'}`;
+}
+</script>
+{% endblock %}
