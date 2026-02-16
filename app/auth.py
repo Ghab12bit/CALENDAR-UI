@@ -10,7 +10,7 @@ import bcrypt
 from app.database import get_db
 from app.models import User
 
-SECRET_KEY = "calendly-clone-secret-change-in-production-abc123xyz"
+SECRET_KEY = "slotsync-secret-change-in-production-abc123xyz"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 COOKIE_NAME = "session_token"
 

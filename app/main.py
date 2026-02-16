@@ -9,7 +9,7 @@ from app.auth import hash_password, create_access_token, COOKIE_NAME
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Calendly Clone")
+app = FastAPI(title="SlotSync")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Register routers

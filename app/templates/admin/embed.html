@@ -1,5 +1,5 @@
 {% extends "admin/base_admin.html" %}
-{% block title %}Embed Codes - {{ event_type.name }} - Calendly Clone{% endblock %}
+{% block title %}Embed Codes - {{ event_type.name }} - SlotSync{% endblock %}
 {% block content %}
 <div class="p-8 max-w-3xl">
     <a href="/admin/event-types" class="text-sm text-gray-500 hover:text-gray-700 flex items-center mb-2">
@@ -29,8 +29,8 @@
         <p class="text-sm text-gray-500 mb-3">Embed the booking page directly on your website</p>
         <div class="relative">
             <textarea readonly id="inline_code" rows="4"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"><!-- Calendly Inline Widget -->
-<div id="calendly-inline-widget" style="min-width:320px;height:700px;">
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"><!-- SlotSync Inline Widget -->
+<div id="ss-inline-widget" style="min-width:320px;height:700px;">
   <iframe src="{{ booking_url }}?embed=true" width="100%" height="100%" frameborder="0" style="border:none;border-radius:8px;"></iframe>
 </div></textarea>
             <button onclick="copyToClipboard('inline_code')" class="absolute top-2 right-2 px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">Copy</button>
@@ -43,25 +43,25 @@
         <p class="text-sm text-gray-500 mb-3">Opens the booking page in a modal popup</p>
         <div class="relative">
             <textarea readonly id="popup_code" rows="12"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"><!-- Calendly Popup Widget -->
-<a href="#" onclick="openCalendlyPopup(); return false;" style="color:#0069ff;font-weight:600;text-decoration:none;">
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"><!-- SlotSync Popup Widget -->
+<a href="#" onclick="openBookingPopup(); return false;" style="color:#0069ff;font-weight:600;text-decoration:none;">
   Schedule a meeting
 </a>
-<div id="calendly-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
+<div id="ss-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
   <div style="background:white;border-radius:12px;width:90%;max-width:800px;height:85vh;position:relative;overflow:hidden;">
-    <button onclick="closeCalendlyPopup()" style="position:absolute;top:12px;right:12px;z-index:10;background:#f3f4f6;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px;">&times;</button>
-    <iframe id="calendly-popup-iframe" src="" width="100%" height="100%" frameborder="0" style="border:none;border-radius:12px;"></iframe>
+    <button onclick="closeBookingPopup()" style="position:absolute;top:12px;right:12px;z-index:10;background:#f3f4f6;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:18px;">&times;</button>
+    <iframe id="ss-popup-iframe" src="" width="100%" height="100%" frameborder="0" style="border:none;border-radius:12px;"></iframe>
   </div>
 </div>
 <script>
-function openCalendlyPopup() {
-  document.getElementById('calendly-popup-iframe').src = '{{ booking_url }}?embed=true';
-  var overlay = document.getElementById('calendly-overlay');
+function openBookingPopup() {
+  document.getElementById('ss-popup-iframe').src = '{{ booking_url }}?embed=true';
+  var overlay = document.getElementById('ss-overlay');
   overlay.style.display = 'flex';
 }
-function closeCalendlyPopup() {
-  document.getElementById('calendly-overlay').style.display = 'none';
-  document.getElementById('calendly-popup-iframe').src = '';
+function closeBookingPopup() {
+  document.getElementById('ss-overlay').style.display = 'none';
+  document.getElementById('ss-popup-iframe').src = '';
 }
 </script></textarea>
             <button onclick="copyToClipboard('popup_code')" class="absolute top-2 right-2 px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">Copy</button>
@@ -74,25 +74,25 @@ function closeCalendlyPopup() {
         <p class="text-sm text-gray-500 mb-3">A floating button in the bottom-right corner of the page</p>
         <div class="relative">
             <textarea readonly id="widget_code" rows="16"
-                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"><!-- Calendly Floating Widget -->
-<div id="calendly-widget-btn" onclick="openCalendlyWidget()" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:{{ event_type.color }};border-radius:50%;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;z-index:9998;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                class="w-full px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono"><!-- SlotSync Floating Widget -->
+<div id="ss-widget-btn" onclick="openBookingWidget()" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:{{ event_type.color }};border-radius:50%;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;z-index:9998;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
 </div>
-<div id="calendly-widget-panel" style="display:none;position:fixed;bottom:96px;right:24px;width:400px;height:600px;background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.15);z-index:9999;overflow:hidden;">
+<div id="ss-widget-panel" style="display:none;position:fixed;bottom:96px;right:24px;width:400px;height:600px;background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.15);z-index:9999;overflow:hidden;">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #e5e7eb;">
     <span style="font-weight:600;">{{ event_type.name }}</span>
-    <button onclick="closeCalendlyWidget()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;">&times;</button>
+    <button onclick="closeBookingWidget()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;">&times;</button>
   </div>
-  <iframe id="calendly-widget-iframe" src="" width="100%" height="calc(100% - 48px)" frameborder="0" style="border:none;"></iframe>
+  <iframe id="ss-widget-iframe" src="" width="100%" height="calc(100% - 48px)" frameborder="0" style="border:none;"></iframe>
 </div>
 <script>
-function openCalendlyWidget() {
-  document.getElementById('calendly-widget-iframe').src = '{{ booking_url }}?embed=true';
-  document.getElementById('calendly-widget-panel').style.display = 'block';
+function openBookingWidget() {
+  document.getElementById('ss-widget-iframe').src = '{{ booking_url }}?embed=true';
+  document.getElementById('ss-widget-panel').style.display = 'block';
 }
-function closeCalendlyWidget() {
-  document.getElementById('calendly-widget-panel').style.display = 'none';
-  document.getElementById('calendly-widget-iframe').src = '';
+function closeBookingWidget() {
+  document.getElementById('ss-widget-panel').style.display = 'none';
+  document.getElementById('ss-widget-iframe').src = '';
 }
 </script></textarea>
             <button onclick="copyToClipboard('widget_code')" class="absolute top-2 right-2 px-3 py-1.5 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700">Copy</button>

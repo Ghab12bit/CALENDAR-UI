@@ -1,6 +1,6 @@
-# CalendlyClone - Meeting Scheduling Platform
+# SlotSync - Meeting Scheduling Platform
 
-A full-featured Calendly clone built with FastAPI, SQLAlchemy, and modern HTML/CSS/JS.
+A full-featured meeting scheduling platform built with FastAPI, SQLAlchemy, and modern HTML/CSS/JS.
 
 ## Quick Start
 
@@ -13,7 +13,7 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The app will:
-1. Create a SQLite database (`calendly.db`)
+1. Create a SQLite database (`slotsync.db`)
 2. Seed a default admin user
 3. Set up Mon-Fri 9am-5pm availability
 
